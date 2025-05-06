@@ -1,33 +1,92 @@
+/* 1) Global & Font -------------------------------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-    font-family: sans-serif;
-    text-align: center;
-    padding: 1rem;
+  font-family: 'Montserrat', sans-serif;
+  background: linear-gradient(135deg, #f0f4ff, #ffe4f1);
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* 2) Animated Headline ---------------------------- */
+.headline { font-size: 3rem; margin-bottom: 1.5rem; display: inline-block; animation: pulse 2s ease-in-out infinite; }
+.headline span { display: inline-block; animation: float 3s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+
+/* 3) Controls & Cropper Container --------------- */
+.controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; align-items: center; margin-bottom: 2rem; }
+#cropContainer { border: 4px dashed #ff9090; border-radius: 16px; padding: 1rem; background: #fff; transition: border-color 0.5s; }
+#cropContainer:hover { border-color: #ff5c5c; }
+input[type=file], select { padding: 0.5rem; border: 2px solid #ccc; border-radius: 8px; transition: all 0.3s; }
+input[type=file]:hover { border-color: #888; }
+select:hover { transform: scale(1.05); }
+
+/* 4) Previews & Buttons --------------------------- */
+.previews { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; }
+.preview-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  background: #fff;
+  transition: transform 0.3s;
+  cursor: grab;
+  touch-action: none;
+}
+.preview-card.dragging { cursor: grabbing; }
+.preview-card:hover { transform: translateY(-10px) scale(1.02); }
+.preview-card canvas { display: block; max-width: 250px; border-bottom: 4px solid #ff9a9e; }
+.preview-card button {
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  margin: 1rem auto;
+  display: block;
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: background 0.5s, transform 0.3s;
+}
+.preview-card button:hover { background: linear-gradient(45deg, #f5576c, #f093fb); transform: scale(1.05); }
+
+/* 5) Zoom Slider --------------------------------- */
+#cropControls { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+#zoomSlider { width: 100%; accent-color: #f5576c; cursor: pointer; transition: accent-color 0.3s; }
+#zoomSlider:hover { accent-color: #f093fb; }
+
+/* Custom text overlays */
+.text-overlay {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    font-family: 'Montserrat', sans-serif;
+    color: #fff;
+    text-shadow: 0 0 4px rgba(0,0,0,0.7);
+    white-space: nowrap;
   }
-  .controls {
-    margin-bottom: 1rem;
+  .name-overlay {
+    font-size: 1.6rem;
+    font-weight: 700;
   }
-  #cropContainer {
-    position: relative;
-    display: inline-block;
-    max-width: 300px;
+  .message-overlay {
+    font-size: 1.3rem;
+    font-style: italic;
   }
-  #cropControls {
-    margin-top: .5rem;
-  }
-  .previews {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
-  }
-  .preview-card {
-    border: 1px solid #ccc;
-    padding: .5rem;
-    border-radius: 8px;
-  }
-  .preview-card canvas {
-    display: block;
-    max-width: 200px;
-    margin-bottom: .5rem;
-  }
+
   
+/* Remove shaking glitch: disable transitions on .preview-card */
+.preview-card {
+    /* was: transition: transform 0.3s; hover lift, etc. */
+    transition: none;
+    cursor: default;
+  }
+  /* disable hover scale */
+  .preview-card:hover {
+    transform: none;
+  }
