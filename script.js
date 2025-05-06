@@ -1,130 +1,103 @@
-// script.js
-
-// 1) Grab your DOM nodes
+// DOM refs
 const photoInput   = document.getElementById('photoInput');
-const previewImage = document.getElementById('previewImage');
 const zoomSlider   = document.getElementById('zoomSlider');
-const cropControls = document.getElementById('cropControls');
 const cardSelect   = document.getElementById('cardSelect');
+const nameInput    = document.getElementById('nameInput');
+const messageInput = document.getElementById('messageInput');
 const previews     = document.getElementById('previews');
 
-let cropper = null;
+// State for the user image
+let userImage = null;
+let imgX = 0, imgY = 0, imgScale = 1;
+let isDragging = false, dragStartX = 0, dragStartY = 0;
 
-// 2) When the user uploads a file, show & crop it
-photoInput.addEventListener('change', (e) => {
+// 1) Load image
+document.getElementById('photoInput').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = () => {
-    // show the <img> for Cropper
-    previewImage.src = reader.result;
-    previewImage.style.display = 'block';
-    cropControls.style.display = 'block';
-
-    // destroy any old cropper
-    if (cropper) cropper.destroy();
-
-    // init a new Cropper
-    cropper = new Cropper(previewImage, {
-      viewMode: 1,
-      aspectRatio: 1,
-      autoCropArea: 1,
-      background: false,
-      ready() {
-        // once it’s ready, render your first preview
-        renderPreviews();
-      },
-      crop() {
-        // re‑render whenever the user moves/resizes the crop box
-        renderPreviews();
-      }
-    });
-
-    // reset zoom slider
-    zoomSlider.value = 1;
+    userImage = new Image();
+    userImage.onload = () => {
+      // center initially
+      imgScale = 1;
+      imgX = (400 - userImage.width) / 2;
+      imgY = (300 - userImage.height) / 2;
+      renderPreviews();
+    };
+    userImage.src = reader.result;
   };
   reader.readAsDataURL(file);
 });
 
-// 3) Zoom slider also re‑renders
-zoomSlider.addEventListener('input', () => {
-  if (!cropper) return;
-  cropper.zoomTo(parseFloat(zoomSlider.value));
+// 2) Zoom slider updates scale
+zoomSlider.addEventListener('input', e => {
+  imgScale = parseFloat(e.target.value);
   renderPreviews();
 });
 
-// 4) Changing the template re‑renders
-cardSelect.addEventListener('change', renderPreviews);
+// 3) Template, name or message changes
+[nameInput, messageInput, cardSelect].forEach(el =>
+  el.addEventListener('input', renderPreviews)
+);
 
-// 5) Core render function
+// 4) Main render function
 function renderPreviews() {
-  // clear out old previews
   previews.innerHTML = '';
-
-  if (!cropper) return;
-
-  // if you only want the **selected** card:
-  const templateSrc = cardSelect.value;
-  renderOne(templateSrc);
-
-  // — or, to show _all_ cards at once:
-  // [...cardSelect.options].forEach(opt => renderOne(opt.value));
+  if (!userImage) return;
+  renderOne(cardSelect.value);
 }
 
+// 5) Render one template
 function renderOne(templateSrc) {
   const templateImg = new Image();
   templateImg.onload = () => {
     const cw = templateImg.width;
     const ch = templateImg.height;
+    const block = document.createElement('div');
+    block.className = 'preview-card';
+    block.style.position = 'relative';
 
-    // prep a canvas the size of your card
     const canvas = document.createElement('canvas');
-    canvas.width  = cw;
+    canvas.width = cw;
     canvas.height = ch;
     const ctx = canvas.getContext('2d');
 
-    // 1) draw the card background
-    ctx.drawImage(templateImg, 0, 0);
-
-    // 2) define your circular “window” (tweak these coords/radius to match each PNG)
-    const circle = { x: cw / 2, y: ch / 3, r: 100 };
-
-    // 3) grab the cropped square from Cropper at the exact size
-    const cropped = cropper.getCroppedCanvas({
-      width: circle.r * 2,
-      height: circle.r * 2
-    });
-
-    // 4) clip a circle & draw that cropped image in
+    // draw user image behind
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(
-      cropped,
-      circle.x - circle.r,
-      circle.y - circle.r
-    );
+    ctx.translate(imgX, imgY);
+    ctx.scale(imgScale, imgScale);
+    ctx.drawImage(userImage, 0, 0);
     ctx.restore();
 
-    // 5) optional overlay text
-    ctx.font = '28px serif';
-    ctx.fillStyle = 'white';
-    ctx.fillText('Happy Birthday!', 20, ch - 30);
+    // draw template on top
+    ctx.drawImage(templateImg, 0, 0);
 
-    // 6) build the preview + Download button
-    const block = document.createElement('div');
-    block.className = 'preview-card';
+    // add name overlay
+    ctx.font = 'bold 40px Montserrat';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(nameInput.value || 'Your Name', 50, 80);
+
+    // add custom message overlay
+    ctx.font = 'italic 28px Montserrat';
+    ctx.fillText(messageInput.value || 'Your custom message', 50, ch - 60);
+
+    // fade in
+    canvas.style.opacity = '0';
+    canvas.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => canvas.style.opacity = '1', 50);
+
+    // enable dragging the photo
+    enablePhotoDrag(canvas);
+
     block.appendChild(canvas);
 
+    // download button
     const btn = document.createElement('button');
-    btn.textContent = 'Download JPEG';
+    btn.textContent = 'Download JPG';
     btn.onclick = () => {
-      // use toDataURL so it works everywhere
-      const dataURL = canvas.toDataURL('image/jpeg', 0.9);
       const link = document.createElement('a');
-      link.href = dataURL;
+      link.href = canvas.toDataURL('image/jpeg', 0.9);
       link.download = 'birthday-card.jpg';
       link.click();
     };
@@ -133,4 +106,28 @@ function renderOne(templateSrc) {
     previews.appendChild(block);
   };
   templateImg.src = templateSrc;
+}
+
+// 6) Drag logic for the photo layer
+function enablePhotoDrag(canvas) {
+  canvas.addEventListener('pointerdown', e => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    imgX += dx;
+    imgY += dy;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    renderPreviews();
+  });
+  canvas.addEventListener('pointerup', e => {
+    isDragging = false;
+    canvas.releasePointerCapture(e.pointerId);
+  });
 }
