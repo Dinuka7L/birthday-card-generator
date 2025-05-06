@@ -73,19 +73,32 @@ function renderOne(templateSrc) {
     // draw template on top
     ctx.drawImage(templateImg, 0, 0);
 
-    // add name overlay
-    ctx.font = 'bold 40px Montserrat';
-    ctx.fillStyle = '#fff';
-    ctx.fillText(nameInput.value || 'Your Name', 50, 80);
+    ctx.drawImage(templateImg, 0, 0);
+
+    // Add draggable overlays
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'text-overlay name-overlay';
+    nameDiv.textContent = nameInput.value || 'Your Name';
+    nameDiv.style.left = '50px';
+    nameDiv.style.top = '80px';
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'text-overlay message-overlay';
+    msgDiv.textContent = messageInput.value || 'Your custom message';
+    msgDiv.style.left = '50px';
+    msgDiv.style.bottom = '60px';
+
+    makeDraggable(nameDiv);
+    makeDraggable(msgDiv);
+
+    block.appendChild(nameDiv);
+    block.appendChild(msgDiv);
 
     // add custom message overlay
     ctx.font = 'italic 28px Montserrat';
     ctx.fillText(messageInput.value || 'Your custom message', 50, ch - 60);
 
-    // fade in
-    canvas.style.opacity = '0';
-    canvas.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => canvas.style.opacity = '1', 50);
+    
 
     // enable dragging the photo
     enablePhotoDrag(canvas);
@@ -131,3 +144,25 @@ function enablePhotoDrag(canvas) {
     canvas.releasePointerCapture(e.pointerId);
   });
 }
+
+function makeDraggable(el) {
+    let isDragging = false, startX, startY;
+  
+    el.addEventListener('pointerdown', e => {
+      isDragging = true;
+      startX = e.clientX - el.offsetLeft;
+      startY = e.clientY - el.offsetTop;
+      el.setPointerCapture(e.pointerId);
+    });
+  
+    el.addEventListener('pointermove', e => {
+      if (!isDragging) return;
+      el.style.left = `${e.clientX - startX}px`;
+      el.style.top = `${e.clientY - startY}px`;
+    });
+  
+    el.addEventListener('pointerup', e => {
+      isDragging = false;
+      el.releasePointerCapture(e.pointerId);
+    });
+  }
