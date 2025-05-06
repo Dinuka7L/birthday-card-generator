@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Birthday Card Maker</title>
+
+  <!-- Cropper.js CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+    integrity="sha512‑..."
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>🎂 Birthday Card Maker</h1>
+
+  <div class="controls">
+    <!-- 1) Upload -->
+    <input type="file" id="photoInput" accept="image/*">
+
+    <!-- 2) Crop preview -->
+    <div id="cropContainer">
+      <img id="previewImage" style="max-width:100%; display:none;">
+      <div id="cropControls" style="display:none">
+        <label>Zoom</label>
+        <input type="range" id="zoomSlider" min="0.1" max="3" step="0.01" value="1">
+      </div>
+    </div>
+
+    <!-- 3) Template selector -->
+    <label for="cardSelect">Choose a card:</label>
+    <select id="cardSelect">
+      <option value="templates/template1.png">Blue Confetti</option>
+      <option value="templates/template2.png">Gold Balloons</option>
+      <!-- …add more… -->
+    </select>
+  </div>
+
+  <!-- 4) Previews & Download buttons -->
+  <div id="previews" class="previews"></div>
+
+  <!-- Cropper.js & your script -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"
+    integrity="sha512‑..."
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script src="script.js"></script>
+</body>
+</html>

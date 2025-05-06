@@ -1,0 +1,33 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+    padding: 1rem;
+  }
+  .controls {
+    margin-bottom: 1rem;
+  }
+  #cropContainer {
+    position: relative;
+    display: inline-block;
+    max-width: 300px;
+  }
+  #cropControls {
+    margin-top: .5rem;
+  }
+  .previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .preview-card {
+    border: 1px solid #ccc;
+    padding: .5rem;
+    border-radius: 8px;
+  }
+  .preview-card canvas {
+    display: block;
+    max-width: 200px;
+    margin-bottom: .5rem;
+  }
+  
