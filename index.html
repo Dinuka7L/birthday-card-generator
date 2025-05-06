@@ -14,6 +14,14 @@
   />
 
   <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+
+<!-- Replace your <h1> with this animated heading -->
+<h1 class="headline">
+  <span>🎨</span> Birthday Card Maker <span>✨</span>
+</h1>
 </head>
 <body>
   <h1>🎂 Birthday Card Maker</h1>
@@ -36,8 +44,14 @@
     <select id="cardSelect">
       <option value="templates/template1.png">Blue Confetti</option>
       <option value="templates/template2.png">Gold Balloons</option>
+      <option value="templates/template3.png">Blue themed SB Blur BG</option>
       <!-- …add more… -->
     </select>
+    <label for="nameInput">Name:</label>
+    <input type="text" id="nameInput" placeholder="Enter name here">
+
+    <label for="messageInput">Message:</label>
+    <input type="text" id="messageInput" placeholder="Enter custom message">
   </div>
 
   <!-- 4) Previews & Download buttons -->
