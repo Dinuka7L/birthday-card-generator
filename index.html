@@ -2,68 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Birthday Card Maker</title>
-
-  <!-- Cropper.js CSS -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
-    integrity="sha512‑..."
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
-
+  <title>USJ Birthday Card Maker</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
-
-<!-- Replace your <h1> with this animated heading -->
-<h1 class="headline">
-  <span>🎨</span> Birthday Card Maker <span>✨</span>
-</h1>
 </head>
 <body>
-  <h1>🎂 Birthday Card Maker</h1>
+  <h1>USJ 🎂 Birthday Card Maker</h1>
 
   <div class="controls">
-    <!-- 1) Upload -->
-    <input type="file" id="photoInput" accept="image/*">
-
-    <!-- 2) Crop preview -->
-    <div id="cropContainer">
-      <img id="previewImage" style="max-width:100%; display:none;">
-      <div id="cropControls" style="display:none">
-        <label>Zoom</label>
-        <input type="range" id="zoomSlider" min="0.1" max="3" step="0.01" value="1">
-      </div>
+    <div class="control-group">
+      <label for="photoInput">1. Upload Photo</label>
+      <input type="file" id="photoInput" accept="image/*">
     </div>
 
-    <!-- 3) Template selector -->
-    <label for="cardSelect">Choose a card:</label>
-    <select id="cardSelect">
-      <option value="templates/template1.png">Blue Confetti</option>
-      <option value="templates/template2.png">Gold Balloons</option>
-      <option value="templates/template3.png">Blue themed SB Blur BG</option>
-      <!-- …add more… -->
-    </select>
-    <label for="nameInput">Name:</label>
-    <input type="text" id="nameInput" placeholder="Enter name here">
+    <div class="control-group">
+      <label for="cardSelect">2. Select Template</label>
+      <select id="cardSelect">
+        <option value="templates/Template-1-SBV-BG-BlueTheme.png">Blue Theme(Reselect this after selecting another card)</option>
+        <option value="templates/Template-2-SBV-BG-PinkTheme.png">Pink Theme</option>
+        <!-- add more templates here -->
+      </select>
+    </div>
 
-    <label for="messageInput">Message:</label>
-    <input type="text" id="messageInput" placeholder="Enter custom message">
+    <fieldset>
+      <legend>3. Adjust Photo</legend>
+      <label>X: <input type="range" id="photoX" min="0" max="1" step="0.01" value="0.5"></label>
+      <label>Y: <input type="range" id="photoY" min="0" max="1" step="0.01" value="0.5"></label>
+      <label>Scale: <input type="range" id="photoScale" min="0.1" max="3" step="0.01" value="1"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. Adjust Name</legend>
+      <input type="text" id="nameInput" placeholder="Enter name" value="Your Name">
+      <label>X: <input type="range" id="nameX" min="0" max="1" step="0.01" value="0.1"></label>
+      <label>Y: <input type="range" id="nameY" min="0" max="1" step="0.01" value="0.1"></label>
+      <label>Scale: <input type="range" id="nameScale" min="0.5" max="5" step="0.1" value="1"></label>
+    </fieldset>
+
+    <label for="nameColor">Name Color:</label>
+      <select id="nameColor">
+        <option value="#000000">Black</option>
+        <option value="#ffffff">White</option>
+        <option value="#1e90ff">Blue</option>
+        <option value="#ff0000">Red</option>
+        <option value="#00a000">Green</option>
+        <!-- add any named or hex colors you like -->
+      </select>
+    <button id="confirmBtn" disabled>Confirm & Enable Download</button>
   </div>
 
-  <!-- 4) Previews & Download buttons -->
-  <div id="previews" class="previews"></div>
+  <button id="downloadBtn" style="display:none;">Download JPEG</button>
 
-  <!-- Cropper.js & your script -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"
-    integrity="sha512‑..."
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  ></script>
+  <div class="card-holder">
+    <canvas id="cardCanvas"></canvas>
+  </div>
+  
+  
   <script src="script.js"></script>
 </body>
 </html>
