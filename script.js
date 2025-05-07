@@ -8,30 +8,30 @@ const nameInput   = document.getElementById('nameInput');
 const nameX       = document.getElementById('nameX');
 const nameY       = document.getElementById('nameY');
 const nameScale   = document.getElementById('nameScale');
+const nameColor   = document.getElementById('nameColor');
 const confirmBtn  = document.getElementById('confirmBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 const canvas      = document.getElementById('cardCanvas');
 const ctx         = canvas.getContext('2d');
-const wrapper     = canvas.parentElement; // assume <div class="card-holder">
-const nameColor = document.getElementById('nameColor');
-
 
 // ===== State =====
 let userImage = null;
 const templateImage = new Image();
 
 // ===== Helpers =====
-//  Scale the *displayed* canvas to fit inside 90vw×90vh
+// Fit the displayed canvas via CSS transform—preserves aspect ratio!
 function fitDisplayCanvas() {
   if (!canvas.width || !canvas.height) return;
   const maxW = window.innerWidth * 0.9;
   const maxH = window.innerHeight * 0.9;
+  // compute uniform scale
   const scale = Math.min(maxW / canvas.width, maxH / canvas.height, 1);
-  canvas.style.width  = `${canvas.width * scale}px`;
-  canvas.style.height = `${canvas.height * scale}px`;
+  // set transform origin top-left so it shrinks toward viewport corner
+  canvas.style.transformOrigin = 'top left';
+  canvas.style.transform = `scale(${scale})`;
 }
 
-// Redraw & then refit
+// Redraw then refit
 function redrawAndFit() {
   drawCanvas();
   fitDisplayCanvas();
@@ -67,21 +67,21 @@ photoInput.addEventListener('change', e => {
 // ===== 3) Watch controls =====
 [
   photoX, photoY, photoScale,
-  nameInput, nameX, nameY, nameScale,nameColor
+  nameInput, nameX, nameY, nameScale, nameColor
 ].forEach(el => el.addEventListener('input', redrawAndFit));
 
 // ===== 4) Draw at full native resolution =====
 function drawCanvas() {
   if (!templateImage.width) return;
 
-  // internal resolution = template size
+  // Internal resolution = template size
   canvas.width  = templateImage.width;
   canvas.height = templateImage.height;
 
-  // clear
+  // Clear
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // draw user photo
+  // Draw user photo
   if (userImage) {
     const px = photoX.value * canvas.width  - (userImage.width * photoScale.value) / 2;
     const py = photoY.value * canvas.height - (userImage.height * photoScale.value) / 2;
@@ -92,14 +92,14 @@ function drawCanvas() {
     ctx.restore();
   }
 
-  // draw template on top
+  // Draw template on top
   ctx.drawImage(templateImage, 0, 0);
 
-  // draw name overlay
+  // Draw name overlay
   ctx.save();
   const fs = 60 * nameScale.value;
   ctx.font = `${fs}px Montserrat`;
-  ctx.fillStyle = nameColor.value; 
+  ctx.fillStyle = nameColor.value;
   ctx.textBaseline = 'top';
   const nx = nameX.value * canvas.width;
   const ny = nameY.value * canvas.height;
