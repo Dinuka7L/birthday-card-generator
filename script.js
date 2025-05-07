@@ -1,168 +1,127 @@
-// DOM refs
-const photoInput   = document.getElementById('photoInput');
-const zoomSlider   = document.getElementById('zoomSlider');
-const cardSelect   = document.getElementById('cardSelect');
-const nameInput    = document.getElementById('nameInput');
-const messageInput = document.getElementById('messageInput');
-const previews     = document.getElementById('previews');
+// ===== Refs =====
+const photoInput  = document.getElementById('photoInput');
+const cardSelect  = document.getElementById('cardSelect');
+const photoX      = document.getElementById('photoX');
+const photoY      = document.getElementById('photoY');
+const photoScale  = document.getElementById('photoScale');
+const nameInput   = document.getElementById('nameInput');
+const nameX       = document.getElementById('nameX');
+const nameY       = document.getElementById('nameY');
+const nameScale   = document.getElementById('nameScale');
+const confirmBtn  = document.getElementById('confirmBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const canvas      = document.getElementById('cardCanvas');
+const ctx         = canvas.getContext('2d');
+const wrapper     = canvas.parentElement; // assume <div class="card-holder">
+const nameColor = document.getElementById('nameColor');
 
-// State for the user image
+
+// ===== State =====
 let userImage = null;
-let imgX = 0, imgY = 0, imgScale = 1;
-let isDragging = false, dragStartX = 0, dragStartY = 0;
+const templateImage = new Image();
 
-// 1) Load image
-document.getElementById('photoInput').addEventListener('change', e => {
+// ===== Helpers =====
+//  Scale the *displayed* canvas to fit inside 90vw×90vh
+function fitDisplayCanvas() {
+  if (!canvas.width || !canvas.height) return;
+  const maxW = window.innerWidth * 0.9;
+  const maxH = window.innerHeight * 0.9;
+  const scale = Math.min(maxW / canvas.width, maxH / canvas.height, 1);
+  canvas.style.width  = `${canvas.width * scale}px`;
+  canvas.style.height = `${canvas.height * scale}px`;
+}
+
+// Redraw & then refit
+function redrawAndFit() {
+  drawCanvas();
+  fitDisplayCanvas();
+}
+
+// ===== 1) Load template =====
+cardSelect.addEventListener('change', () => {
+  confirmBtn.disabled = true;
+  downloadBtn.style.display = 'none';
+  templateImage.src = cardSelect.value;
+});
+templateImage.onload = () => {
+  redrawAndFit();
+  confirmBtn.disabled = !userImage;
+};
+
+// ===== 2) Load photo =====
+photoInput.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     userImage = new Image();
     userImage.onload = () => {
-      // center initially
-      imgScale = 1;
-      imgX = (400 - userImage.width) / 2;
-      imgY = (300 - userImage.height) / 2;
-      renderPreviews();
+      redrawAndFit();
+      confirmBtn.disabled = !templateImage.width;
     };
     userImage.src = reader.result;
   };
   reader.readAsDataURL(file);
 });
 
-// 2) Zoom slider updates scale
-zoomSlider.addEventListener('input', e => {
-  imgScale = parseFloat(e.target.value);
-  renderPreviews();
-});
+// ===== 3) Watch controls =====
+[
+  photoX, photoY, photoScale,
+  nameInput, nameX, nameY, nameScale,nameColor
+].forEach(el => el.addEventListener('input', redrawAndFit));
 
-// 3) Template, name or message changes
-[nameInput, messageInput, cardSelect].forEach(el =>
-  el.addEventListener('input', renderPreviews)
-);
+// ===== 4) Draw at full native resolution =====
+function drawCanvas() {
+  if (!templateImage.width) return;
 
-// 4) Main render function
-function renderPreviews() {
-  previews.innerHTML = '';
-  if (!userImage) return;
-  renderOne(cardSelect.value);
-}
+  // internal resolution = template size
+  canvas.width  = templateImage.width;
+  canvas.height = templateImage.height;
 
-// 5) Render one template
-function renderOne(templateSrc) {
-  const templateImg = new Image();
-  templateImg.onload = () => {
-    const cw = templateImg.width;
-    const ch = templateImg.height;
-    const block = document.createElement('div');
-    block.className = 'preview-card';
-    block.style.position = 'relative';
+  // clear
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const canvas = document.createElement('canvas');
-    canvas.width = cw;
-    canvas.height = ch;
-    const ctx = canvas.getContext('2d');
-
-    // draw user image behind
+  // draw user photo
+  if (userImage) {
+    const px = photoX.value * canvas.width  - (userImage.width * photoScale.value) / 2;
+    const py = photoY.value * canvas.height - (userImage.height * photoScale.value) / 2;
     ctx.save();
-    ctx.translate(imgX, imgY);
-    ctx.scale(imgScale, imgScale);
+    ctx.translate(px, py);
+    ctx.scale(photoScale.value, photoScale.value);
     ctx.drawImage(userImage, 0, 0);
     ctx.restore();
-
-    // draw template on top
-    ctx.drawImage(templateImg, 0, 0);
-
-    ctx.drawImage(templateImg, 0, 0);
-
-    // Add draggable overlays
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'text-overlay name-overlay';
-    nameDiv.textContent = nameInput.value || 'Your Name';
-    nameDiv.style.left = '50px';
-    nameDiv.style.top = '80px';
-
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'text-overlay message-overlay';
-    msgDiv.textContent = messageInput.value || 'Your custom message';
-    msgDiv.style.left = '50px';
-    msgDiv.style.bottom = '60px';
-
-    makeDraggable(nameDiv);
-    makeDraggable(msgDiv);
-
-    block.appendChild(nameDiv);
-    block.appendChild(msgDiv);
-
-    // add custom message overlay
-    ctx.font = 'italic 28px Montserrat';
-    ctx.fillText(messageInput.value || 'Your custom message', 50, ch - 60);
-
-    
-
-    // enable dragging the photo
-    enablePhotoDrag(canvas);
-
-    block.appendChild(canvas);
-
-    // download button
-    const btn = document.createElement('button');
-    btn.textContent = 'Download JPG';
-    btn.onclick = () => {
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/jpeg', 0.9);
-      link.download = 'birthday-card.jpg';
-      link.click();
-    };
-    block.appendChild(btn);
-
-    previews.appendChild(block);
-  };
-  templateImg.src = templateSrc;
-}
-
-// 6) Drag logic for the photo layer
-function enablePhotoDrag(canvas) {
-  canvas.addEventListener('pointerdown', e => {
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    canvas.setPointerCapture(e.pointerId);
-  });
-  canvas.addEventListener('pointermove', e => {
-    if (!isDragging) return;
-    const dx = e.clientX - dragStartX;
-    const dy = e.clientY - dragStartY;
-    imgX += dx;
-    imgY += dy;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    renderPreviews();
-  });
-  canvas.addEventListener('pointerup', e => {
-    isDragging = false;
-    canvas.releasePointerCapture(e.pointerId);
-  });
-}
-
-function makeDraggable(el) {
-    let isDragging = false, startX, startY;
-  
-    el.addEventListener('pointerdown', e => {
-      isDragging = true;
-      startX = e.clientX - el.offsetLeft;
-      startY = e.clientY - el.offsetTop;
-      el.setPointerCapture(e.pointerId);
-    });
-  
-    el.addEventListener('pointermove', e => {
-      if (!isDragging) return;
-      el.style.left = `${e.clientX - startX}px`;
-      el.style.top = `${e.clientY - startY}px`;
-    });
-  
-    el.addEventListener('pointerup', e => {
-      isDragging = false;
-      el.releasePointerCapture(e.pointerId);
-    });
   }
+
+  // draw template on top
+  ctx.drawImage(templateImage, 0, 0);
+
+  // draw name overlay
+  ctx.save();
+  const fs = 60 * nameScale.value;
+  ctx.font = `${fs}px Montserrat`;
+  ctx.fillStyle = nameColor.value; 
+  ctx.textBaseline = 'top';
+  const nx = nameX.value * canvas.width;
+  const ny = nameY.value * canvas.height;
+  ctx.fillText(nameInput.value || '', nx, ny);
+  ctx.restore();
+}
+
+// ===== 5) Confirm → show download =====
+confirmBtn.addEventListener('click', () => {
+  downloadBtn.style.display = 'block';
+});
+
+// ===== 6) Download full‑res JPEG =====
+downloadBtn.addEventListener('click', () => {
+  const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+  const link = document.createElement('a');
+  link.href = dataURL;
+  link.download = 'birthday-card.jpg';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+// ===== 7) Refit on window resize =====
+window.addEventListener('resize', fitDisplayCanvas);
