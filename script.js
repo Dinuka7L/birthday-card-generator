@@ -18,25 +18,6 @@ const ctx         = canvas.getContext('2d');
 let userImage = null;
 const templateImage = new Image();
 
-// ===== Helpers =====
-// Fit the displayed canvas via CSS transform—preserves aspect ratio!
-function fitDisplayCanvas() {
-  if (!canvas.width || !canvas.height) return;
-  const maxW = window.innerWidth * 0.9;
-  const maxH = window.innerHeight * 0.9;
-  // compute uniform scale
-  const scale = Math.min(maxW / canvas.width, maxH / canvas.height, 1);
-  // set transform origin top-left so it shrinks toward viewport corner
-  canvas.style.transformOrigin = 'top left';
-  canvas.style.transform = `scale(${scale})`;
-}
-
-// Redraw then refit
-function redrawAndFit() {
-  drawCanvas();
-  fitDisplayCanvas();
-}
-
 // ===== 1) Load template =====
 cardSelect.addEventListener('change', () => {
   confirmBtn.disabled = true;
@@ -44,7 +25,7 @@ cardSelect.addEventListener('change', () => {
   templateImage.src = cardSelect.value;
 });
 templateImage.onload = () => {
-  redrawAndFit();
+  drawCanvas();
   confirmBtn.disabled = !userImage;
 };
 
@@ -56,7 +37,7 @@ photoInput.addEventListener('change', e => {
   reader.onload = () => {
     userImage = new Image();
     userImage.onload = () => {
-      redrawAndFit();
+      drawCanvas();
       confirmBtn.disabled = !templateImage.width;
     };
     userImage.src = reader.result;
@@ -68,20 +49,20 @@ photoInput.addEventListener('change', e => {
 [
   photoX, photoY, photoScale,
   nameInput, nameX, nameY, nameScale, nameColor
-].forEach(el => el.addEventListener('input', redrawAndFit));
+].forEach(el => el.addEventListener('input', drawCanvas));
 
 // ===== 4) Draw at full native resolution =====
 function drawCanvas() {
   if (!templateImage.width) return;
 
-  // Internal resolution = template size
+  // internal resolution = template size
   canvas.width  = templateImage.width;
   canvas.height = templateImage.height;
 
-  // Clear
+  // clear
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw user photo
+  // draw user photo
   if (userImage) {
     const px = photoX.value * canvas.width  - (userImage.width * photoScale.value) / 2;
     const py = photoY.value * canvas.height - (userImage.height * photoScale.value) / 2;
@@ -92,10 +73,10 @@ function drawCanvas() {
     ctx.restore();
   }
 
-  // Draw template on top
+  // draw template on top
   ctx.drawImage(templateImage, 0, 0);
 
-  // Draw name overlay
+  // draw name overlay
   ctx.save();
   const fs = 60 * nameScale.value;
   ctx.font = `${fs}px Montserrat`;
@@ -109,7 +90,7 @@ function drawCanvas() {
 
 // ===== 5) Confirm → show download =====
 confirmBtn.addEventListener('click', () => {
-  downloadBtn.style.display = 'block';
+  downloadBtn.style.display = 'inline-block';
 });
 
 // ===== 6) Download full‑res JPEG =====
@@ -122,6 +103,3 @@ downloadBtn.addEventListener('click', () => {
   link.click();
   document.body.removeChild(link);
 });
-
-// ===== 7) Refit on window resize =====
-window.addEventListener('resize', fitDisplayCanvas);
